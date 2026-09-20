@@ -39,15 +39,15 @@
         <span class="bubble-avatar ai" aria-hidden="true"></span>
         <div class="ai-check-bot-titles">
           <strong>AI assistant</strong>
-          <p>問時間表 · 建／改堂 · syllabus</p>
+          <p>Ask schedule · create/edit sessions · syllabus</p>
         </div>
         <button type="button" class="q-editor-remove" id="btn-ai-check-minimize" aria-label="Minimize" title="Minimize">×</button>
       </div>
       <div class="ai-check-chips" id="ai-check-chips">
-        <button type="button" class="ai-chip" data-ai-prompt="呢星期有咩堂？">呢星期有咩堂？</button>
-        <button type="button" class="ai-chip" data-ai-prompt="幫我加 Week 6 session · PID tuning">加 Week 6</button>
-        <button type="button" class="ai-chip" data-ai-prompt="而家呢科今日堂 topic 改做 Mid-term review">改今日 topic</button>
-        <button type="button" class="ai-chip" data-ai-prompt="功能">可以做咩？</button>
+        <button type="button" class="ai-chip" data-ai-prompt="What classes this week?">What classes this week?</button>
+        <button type="button" class="ai-chip" data-ai-prompt="Add Week 6 session · PID tuning">Add Week 6</button>
+        <button type="button" class="ai-chip" data-ai-prompt="Change today's topic to Mid-term review">Change today’s topic</button>
+        <button type="button" class="ai-chip" data-ai-prompt="help">What can you do?</button>
       </div>
       <div class="ai-check-log" id="ai-check-log" aria-live="polite"></div>
       <form class="ai-check-composer" id="form-ai-check">
@@ -55,7 +55,7 @@
           <input type="file" id="ai-check-file" accept=".pdf,.doc,.docx,.txt,application/pdf,text/plain" hidden />
           <span aria-hidden="true">＋</span>
         </label>
-        <input name="msg" type="text" id="ai-check-input" placeholder="指令或問題…" autocomplete="off" />
+        <input name="msg" type="text" id="ai-check-input" placeholder="Command or question…" autocomplete="off" />
         <button class="btn small primary" type="submit">Send</button>
       </form>
       <p class="hint" id="ai-check-attach-hint" hidden></p>
@@ -72,17 +72,21 @@
       <div class="screen-head">
         <p class="eyebrow">TeachKit</p>
         <h1>Start</h1>
-        <p class="muted">揀一邊開始；之後用右上角切換 Teacher / Student。</p>
+        <p class="muted">Pick a side to start; switch Teacher / Student anytime from the top-right.</p>
       </div>
       <div class="choice-stack role-choices">
         <button type="button" class="choice-card" data-go="navigator">
           <strong>Teacher</strong>
-          <span>先入 Workspace；右上角可去 Live，亦可切去 Student。</span>
+          <span>Start in Workspace; use the top-right for Live or switch to Student.</span>
         </button>
         <button type="button" class="choice-card" data-go="student-join">
           <strong>Student</strong>
-          <span>先入 In-class；右上角可去 pre-class，亦可切去 Teacher。</span>
+          <span>Start in In-class; use the top-right for Pre-class or switch to Teacher.</span>
         </button>
+      </div>
+      <div class="tour-entry">
+        <button type="button" class="btn primary" id="btn-start-tour">Start tour · How to use TeachKit</button>
+        <p class="hint">About 1 minute · walks through teacher prep/Live and student join</p>
       </div>
     </section>
   </template>
@@ -130,7 +134,7 @@
     <section class="screen narrow-form">
       <p class="eyebrow">Create</p>
       <h1>New course</h1>
-      <p class="muted">開科時一併開第一個 Section（多數之後再加 L02）。</p>
+      <p class="muted">Creating a course also creates the first Section (add L02 later if needed).</p>
       <form class="panel form-stack" id="form-create-course">
         <label class="field"><span>Course code</span><input name="code" placeholder="e.g. EE3002" required /></label>
         <label class="field"><span>Course name</span><input name="title" placeholder="e.g. Digital Control" required /></label>
@@ -149,7 +153,7 @@
     <section class="screen narrow-form">
       <p class="eyebrow">Create</p>
       <h1>New section</h1>
-      <p class="muted">同一科再加一個班（L02、L03…）。Session 列表各自獨立。</p>
+      <p class="muted">Add another class section to this course (L02, L03…). Each has its own session list.</p>
       <p class="context-line" id="create-section-course"></p>
       <form class="panel form-stack" id="form-create-section">
         <label class="field"><span>Section code</span><input name="label" placeholder="e.g. L02" required /></label>
@@ -169,7 +173,7 @@
     <section class="screen narrow-form">
       <p class="eyebrow">Create</p>
       <h1>New session</h1>
-      <p class="muted">加一堂入而家揀緊嘅 Course + Section。Time 預設跟 Section。</p>
+      <p class="muted">Add a session to the selected Course + Section. Time defaults to the Section time.</p>
       <p class="context-line" data-context></p>
       <form class="panel form-stack" id="form-create-session">
         <label class="field"><span>Topic</span><input name="topic" placeholder="e.g. PID design sketch" required /></label>
@@ -214,25 +218,25 @@
       <div class="readonly-block">
         <p class="field-label">This session</p>
         <p class="readonly-value" data-context></p>
-        <p class="field-hint">來自 Navigator 已選嘅 Course / Section / Week，呢度唔使再打。</p>
+        <p class="field-hint">Taken from the Course / Section / Week selected in Navigator — no need to re-enter.</p>
       </div>
 
       <form id="form-session-prep" class="panel form-stack prep-form">
         <div class="field">
-          <span class="field-label">1. Lecture slides（可選）</span>
-          <p class="field-hint">可上載 <strong>.ppt</strong>／<strong>.pptx</strong>；prototype 亦可唔上載，淨係走流程。</p>
+          <span class="field-label">1. Lecture slides (optional)</span>
+          <p class="field-hint">Upload a <strong>.ppt</strong> / <strong>.pptx</strong>; in this prototype you can also skip and just walk through the flow.</p>
           <label class="file-pick">
             <input type="file" id="prep-pptx" accept=".ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation" />
             <span class="file-pick-ui">
               <strong>Choose PowerPoint…</strong>
-              <small id="prep-file-name">未選擇（可跳過）</small>
+              <small id="prep-file-name">No file selected (optional)</small>
             </span>
           </label>
         </div>
 
         <div class="field">
-          <span class="field-label">2. Pre-class questions（可多條）</span>
-          <p class="field-hint">每題寫清楚問題字句，並標明對應邊幾頁 slide（例如 4–6）。</p>
+          <span class="field-label">2. Pre-class questions (add multiple)</span>
+          <p class="field-hint">Write each question clearly and note the linked slide pages (e.g. 4–6).</p>
           <div class="stack-gap" id="prep-questions">
             <div class="q-editor" data-q="1">
               <div class="q-editor-head">
@@ -275,8 +279,8 @@
         </div>
 
         <div class="field">
-          <span class="field-label">3. In-class activities（可多條 · 可拖排序 · Live 用）</span>
-          <p class="field-hint">拖 <strong>☰</strong> 調課堂活動次序。可加 Discussion、Poll、Q&A、Canvas、Word cloud、Quiz；Live 跟呢個次序揀開。</p>
+          <span class="field-label">3. In-class activities (multiple · drag to reorder · used in Live)</span>
+          <p class="field-hint">Drag <strong>☰</strong> to reorder. Add Discussion, Poll, Q&A, Canvas, Word cloud, or Quiz; Live follows this order.</p>
           <div class="stack-gap" id="prep-activities"></div>
           <button type="button" class="btn small" id="btn-add-activity-prep">+ Add another activity</button>
 
@@ -286,7 +290,7 @@
                 <h2 id="prep-act-type-title">Add activity</h2>
                 <button type="button" class="q-editor-remove" id="btn-close-prep-act-type" aria-label="Close" title="Close">×</button>
               </div>
-              <p class="field-hint">揀要加邊種活動（之後可再擴充類型）。</p>
+              <p class="field-hint">Pick an activity type to add (more types can be added later).</p>
               <div class="act-type-list" id="prep-act-type-list" role="list"></div>
               <div class="cta-row prep-actions">
                 <button type="button" class="btn" id="btn-cancel-prep-act-type">Cancel</button>
@@ -303,7 +307,7 @@
 
         <div class="prep-link-box is-hidden" id="prep-link-box" hidden>
           <p class="field-label">Pre-class link for students</p>
-          <p class="field-hint">儲存後產生 Pre-class 連結，同時鎖定 in-class activities 俾 Live 用。</p>
+          <p class="field-hint">Saving creates a Pre-class link and locks in-class activities for Live.</p>
           <div class="link-row">
             <input type="text" id="prep-share-link" readonly />
             <button type="button" class="btn small primary" id="btn-copy-prep-link">Copy</button>
@@ -318,7 +322,7 @@
     <section class="screen narrow">
       <p class="eyebrow">Student · Chat room</p>
       <h1>Scan classroom QR</h1>
-      <p class="muted">入課室討論前，用手機掃堂上 QR（prototype 用撳掣代替）。</p>
+      <p class="muted">Before joining class discussion, scan the classroom QR on your phone (this prototype uses a button instead).</p>
       <p class="context-line" data-context></p>
       <div class="qr"></div>
       <p class="muted">Session code <strong>CTRL-4F</strong></p>
@@ -332,7 +336,7 @@
     <section class="screen narrow-form">
       <p class="eyebrow">Student · Pre-class</p>
       <h1>Before you start</h1>
-      <p class="muted">填少少基本資料，再入去睇投影片同答問題。唔使另開 PowerPoint。</p>
+      <p class="muted">Enter a few details, then view slides and answer questions — no separate PowerPoint needed.</p>
       <p class="context-line" data-context></p>
       <form class="panel form-stack" id="form-preclass-entry">
         <label class="field">
@@ -354,7 +358,7 @@
         <div class="cta-row">
           <button type="submit" class="btn primary">Enter pre-class</button>
         </div>
-        <p class="hint">資料只用於 prototype 示範；真實系統可匿名／加密。</p>
+        <p class="hint">Data is for this prototype only; a real system can be anonymous / encrypted.</p>
       </form>
     </section>
   </template>
@@ -389,7 +393,7 @@
             <button type="button" class="btn small" id="slide-prev">Previous</button>
             <button type="button" class="btn small" id="slide-next">Next</button>
           </div>
-          <p class="hint slide-hint">投影片嵌喺呢度——唔使另開 PowerPoint，手機都可以邊行邊睇。</p>
+          <p class="hint slide-hint">Slides are embedded here — no separate PowerPoint; works on the phone on the go.</p>
         </div>
 
         <div class="panel chat-panel preclass-chat">
@@ -462,8 +466,8 @@
 
       <div id="lobby-waiting" class="panel soft">
         <p class="readonly-value">Waiting for teacher…</p>
-        <p class="muted">老師開 Discussion、Poll、Q&A、Canvas、Word cloud 或 Quiz 之後，呢度會解鎖對應活動。</p>
-        <p class="hint">Prototype：去 Teacher → Live 開活動，再返呢度 Check again。</p>
+        <p class="muted">When the teacher opens Discussion, Poll, Q&A, Canvas, Word cloud, or Quiz, the matching activity unlocks here.</p>
+        <p class="hint">Prototype tip: open an activity in Teacher → Live, then come back here and Check again.</p>
         <div class="cta-row">
           <button type="button" class="btn small" id="btn-lobby-refresh">Check again</button>
           <button type="button" class="btn" data-go="student-join">Back to scan</button>
@@ -473,7 +477,7 @@
       <div id="lobby-poll" class="panel soft is-hidden" hidden>
         <p class="field-label">Poll is open</p>
         <p class="readonly-value" id="lobby-poll-question"></p>
-        <p class="muted">老師已開始投票。撳入去揀你嘅選項。</p>
+        <p class="muted">The teacher started a poll. Enter to pick your option.</p>
         <div class="cta-row">
           <button type="button" class="btn primary" data-go="student-poll">Enter poll</button>
           <button type="button" class="btn small" id="btn-lobby-refresh-poll">Check again</button>
@@ -483,7 +487,7 @@
       <div id="lobby-qa" class="panel soft is-hidden" hidden>
         <p class="field-label">Q&amp;A is open</p>
         <p class="readonly-value" id="lobby-qa-prompt"></p>
-        <p class="muted">匿名提問、upvote。撳入去參與。</p>
+        <p class="muted">Ask anonymously and upvote. Enter to take part.</p>
         <div class="cta-row">
           <button type="button" class="btn primary" data-go="student-qa">Enter Q&amp;A</button>
           <button type="button" class="btn small" id="btn-lobby-refresh-qa">Check again</button>
@@ -493,7 +497,7 @@
       <div id="lobby-canvas" class="panel soft is-hidden" hidden>
         <p class="field-label">Brainstorm canvas is open</p>
         <p class="readonly-value" id="lobby-canvas-prompt"></p>
-        <p class="muted">全班 sticky wall。撳入去貼一張便利貼。</p>
+        <p class="muted">Class sticky wall. Enter to add a note.</p>
         <div class="cta-row">
           <button type="button" class="btn primary" data-go="student-canvas">Enter canvas</button>
           <button type="button" class="btn small" id="btn-lobby-refresh-canvas">Check again</button>
@@ -503,7 +507,7 @@
       <div id="lobby-wordcloud" class="panel soft is-hidden" hidden>
         <p class="field-label">Word cloud is open</p>
         <p class="readonly-value" id="lobby-wordcloud-prompt"></p>
-        <p class="muted">交一個字／短詞，睇即時 cloud。</p>
+        <p class="muted">Submit one word or short phrase and see the live cloud.</p>
         <div class="cta-row">
           <button type="button" class="btn primary" data-go="student-wordcloud">Enter word cloud</button>
           <button type="button" class="btn small" id="btn-lobby-refresh-wordcloud">Check again</button>
@@ -513,7 +517,7 @@
       <div id="lobby-quiz" class="panel soft is-hidden" hidden>
         <p class="field-label">Timed quiz is open</p>
         <p class="readonly-value" id="lobby-quiz-question"></p>
-        <p class="muted">限時 MCQ。撳入去作答。</p>
+        <p class="muted">Timed MCQ. Enter to answer.</p>
         <div class="cta-row">
           <button type="button" class="btn primary" data-go="student-quiz">Enter quiz</button>
           <button type="button" class="btn small" id="btn-lobby-refresh-quiz">Check again</button>
@@ -521,15 +525,15 @@
       </div>
 
       <div id="lobby-ready" class="is-hidden" hidden>
-        <p class="muted">老師已開始 Discussion。揀點樣入討論組：</p>
+        <p class="muted">The teacher started Discussion. Choose how to join a group:</p>
         <div class="choice-stack">
           <button type="button" class="choice-card" data-go="student-auto-wait">
             <strong>Auto-assign</strong>
-            <span>系統幫你分組。適合唔執著同邊個一組。</span>
+            <span>The system assigns you a group. Good if you don’t mind who you’re with.</span>
           </button>
           <button type="button" class="choice-card" data-go="student-group-manual">
             <strong>Start or join a room</strong>
-            <span>自己開房攞邀請碼，或輸入朋友嘅碼加入。</span>
+            <span>Start a room for an invite code, or join with a friend’s code.</span>
           </button>
         </div>
         <button type="button" class="btn" data-go="student-join">Back to scan</button>
@@ -548,7 +552,7 @@
         <p class="readonly-value" id="student-poll-question"></p>
         <p class="field-hint" id="student-poll-meta"></p>
         <div class="student-poll-options" id="student-poll-options" role="list"></div>
-        <p class="hint" id="student-poll-hint">揀一個選項提交（prototype）。</p>
+        <p class="hint" id="student-poll-hint">Pick one option to submit (prototype).</p>
         <div class="cta-row prep-actions">
           <button type="button" class="btn primary" id="btn-student-poll-submit" disabled>Submit vote</button>
           <button type="button" class="btn" data-go="student-lobby">Back to lobby</button>
@@ -558,7 +562,7 @@
       <div class="panel soft is-hidden" id="student-poll-done-panel" hidden>
         <p class="field-label">Your vote</p>
         <p class="readonly-value" id="student-poll-choice"></p>
-        <p class="muted">已提交。等老師結束投票後，課堂結果會喺 Live 顯示（mock）。</p>
+        <p class="muted">Submitted. When the teacher ends the poll, class results show on Live (mock).</p>
         <div class="poll-results" id="student-poll-results"></div>
         <div class="cta-row">
           <button type="button" class="btn" data-go="student-lobby">Back to lobby</button>
@@ -567,7 +571,7 @@
 
       <div class="panel soft is-hidden" id="student-poll-closed" hidden>
         <p class="readonly-value">Poll closed</p>
-        <p class="muted">老師已結束呢輪投票。可返 lobby 等下一個活動。</p>
+        <p class="muted">This poll has ended. Return to the lobby for the next activity.</p>
         <div class="cta-row">
           <button type="button" class="btn primary" data-go="student-lobby">Back to lobby</button>
         </div>
@@ -597,7 +601,7 @@
 
       <div class="panel soft is-hidden" id="student-qa-closed" hidden>
         <p class="readonly-value">Q&amp;A closed</p>
-        <p class="muted">老師已結束呢輪 Q&amp;A。</p>
+        <p class="muted">This Q&amp;A has ended.</p>
         <div class="cta-row">
           <button type="button" class="btn primary" data-go="student-lobby">Back to lobby</button>
         </div>
@@ -626,7 +630,7 @@
 
       <div class="panel soft is-hidden" id="student-canvas-closed" hidden>
         <p class="readonly-value">Canvas closed</p>
-        <p class="muted">老師已結束呢輪 brainstorm。</p>
+        <p class="muted">This brainstorm has ended.</p>
         <div class="cta-row">
           <button type="button" class="btn primary" data-go="student-lobby">Back to lobby</button>
         </div>
@@ -647,7 +651,7 @@
           <input name="word" type="text" maxlength="24" placeholder="One word / short phrase" autocomplete="off" required />
           <button class="btn primary small" type="submit">Submit</button>
         </form>
-        <p class="hint" id="student-wordcloud-done" hidden>已提交。下面係全班 cloud（mock）。</p>
+        <p class="hint" id="student-wordcloud-done" hidden>Submitted. Below is the class cloud (mock).</p>
         <div class="word-cloud mt" id="student-wordcloud-cloud"></div>
         <div class="cta-row">
           <button type="button" class="btn" data-go="student-lobby">Back to lobby</button>
@@ -656,7 +660,7 @@
 
       <div class="panel soft is-hidden" id="student-wordcloud-closed" hidden>
         <p class="readonly-value">Word cloud closed</p>
-        <p class="muted">老師已結束呢輪 word cloud。</p>
+        <p class="muted">This word cloud has ended.</p>
         <div class="cta-row">
           <button type="button" class="btn primary" data-go="student-lobby">Back to lobby</button>
         </div>
@@ -695,7 +699,7 @@
 
       <div class="panel soft is-hidden" id="student-quiz-closed" hidden>
         <p class="readonly-value">Quiz closed</p>
-        <p class="muted">老師已結束呢輪 quiz。</p>
+        <p class="muted">This quiz has ended.</p>
         <div class="cta-row">
           <button type="button" class="btn primary" data-go="student-lobby">Back to lobby</button>
         </div>
@@ -727,7 +731,7 @@
       <p class="eyebrow">Start or join a room</p>
       <h1>With friends</h1>
       <p class="context-line" data-context></p>
-      <p class="muted">開房會有邀請碼；朋友掃咗同一堂 QR 之後，用碼加入你呢組。</p>
+      <p class="muted">Starting a room gives an invite code; friends who scanned the same class QR can join with it.</p>
 
       <div class="mode-tabs" id="group-mode-tabs">
         <button type="button" class="mode-tab on" data-mode="create">Start a room</button>
@@ -737,7 +741,7 @@
       <div class="panel form-stack" id="panel-create-room" data-group-panel="create">
         <p class="field-label">Your invite code</p>
         <p class="invite-code" id="host-code">G-7K2</p>
-        <p class="field-hint">分享俾朋友輸入。佢哋要已掃同一個課堂 QR。</p>
+        <p class="field-hint">Share this for friends to type. They must have scanned the same class QR.</p>
         <ul id="host-members" class="buddy-list"><li>You (host)</li></ul>
         <div class="cta-row">
           <button type="button" class="btn small" id="sim-friend-join">Simulate friend joined</button>
@@ -753,7 +757,7 @@
         <div class="cta-row">
           <button type="submit" class="btn primary">Join room</button>
         </div>
-        <p class="hint">Prototype：輸入任何碼都會入到示範組。</p>
+        <p class="hint">Prototype: any code joins the demo group.</p>
       </form>
 
       <button type="button" class="btn" data-go="student-lobby">Back</button>
@@ -785,7 +789,7 @@
             <button type="button" class="btn small" id="group-slide-prev">Previous</button>
             <button type="button" class="btn small" id="group-slide-next">Next</button>
           </div>
-          <p class="hint slide-hint">本組討論用嘅投影片——大家睇同一頁，唔使另開 PowerPoint。</p>
+          <p class="hint slide-hint">Slides for this group discussion — everyone sees the same page; no separate PowerPoint.</p>
         </div>
 
         <div class="panel chat-panel preclass-chat">
@@ -796,7 +800,7 @@
           </div>
           <div class="ai-card">
             <strong>AI facilitator (mock)</strong>
-            <p>會：① 同學離題時拉返主題 ② 畀短回應／追問 ③ 老師按「總結」後為本組寫總結</p>
+            <p>Will: (1) pull the group back on topic (2) give short replies / follow-ups (3) write a group summary when the teacher ends discussion</p>
           </div>
           <div id="group-summary-banner" class="summary-banner is-hidden" role="status">
             Teacher ended discussion · AI is posting this group’s summary…
@@ -817,22 +821,22 @@
         <p class="eyebrow">Teacher · in class</p>
         <h1>Live classroom</h1>
         <p class="context-line" data-context></p>
-        <p class="muted">揀一條準備好嘅活動打開，或即場 <strong>新增</strong> discussion／poll／Q&amp;A／canvas／word cloud／quiz。</p>
+        <p class="muted">Open a prepared activity, or <strong>add</strong> a discussion / poll / Q&amp;A / canvas / word cloud / quiz on the spot.</p>
       </div>
 
       <div class="panel soft mt" id="live-phase-panel">
         <div id="live-idle">
           <p class="field-label">Open an activity</p>
-          <p class="field-hint">一次開一條。可選 Session prep 準備好嘅，或撳 + Add activity 即場加。</p>
+          <p class="field-hint">Open one at a time. Pick from Session prep, or tap + Add activity to create one now.</p>
           <div class="disc-pick-list" id="live-activity-pick"></div>
           <p class="hint" id="live-prep-hint" hidden>
-            未儲存活動——會用示範 discussion／poll。可喺呢度新增。
+            Activities not saved yet — demo discussion/poll will be used. You can add more here.
           </p>
           <div class="cta-row prep-actions">
             <button type="button" class="btn primary" id="btn-start-activity">Start this activity</button>
             <button type="button" class="btn" id="btn-add-activity">+ Add activity</button>
           </div>
-          <p class="hint">學生掃碼後會喺 lobby 等；你一開始 discussion，佢哋就可以入組。投票則即時開。</p>
+          <p class="hint">After scanning, students wait in the lobby; when you start discussion they can join groups. Polls open immediately.</p>
         </div>
 
         <div id="live-after-groups" class="is-hidden" hidden>
@@ -840,17 +844,17 @@
           <p class="readonly-value" id="live-topic-running"></p>
           <p class="muted" id="live-question-running"></p>
           <p class="muted" id="live-ai-running"></p>
-          <p class="field-hint">組內 AI 跟住你打開嘅呢條討論行。完結後可再開另一條。</p>
+          <p class="field-hint">In-group AI follows the discussion you opened. After it ends you can start another.</p>
 
           <div class="broadcast-box">
             <p class="field-label">Broadcast to all rooms</p>
-            <p class="field-hint">輸入一句指令，會出現喺每組 chat（全體可見）。</p>
+            <p class="field-hint">Type a message to broadcast to every group chat (visible to all).</p>
             <form class="composer broadcast-composer" id="form-broadcast">
-              <input name="msg" type="text" placeholder="e.g. 剩 3 分鐘——每組交一句共識" autocomplete="off" />
+              <input name="msg" type="text" placeholder="e.g. 3 minutes left — each group share one consensus" autocomplete="off" />
               <button class="btn primary small" type="submit">Send to all</button>
             </form>
             <div class="broadcast-log" id="broadcast-log" hidden></div>
-            <p class="hint" id="broadcast-status" hidden>已送到全部房間（mock）。</p>
+            <p class="hint" id="broadcast-status" hidden>Sent to all rooms (mock).</p>
           </div>
 
           <div class="cta-row prep-actions">
@@ -858,7 +862,7 @@
               End discussion · AI summarize all rooms
             </button>
           </div>
-          <p class="hint" id="summarize-status" hidden>已向全部組發送總結指令（mock）。</p>
+          <p class="hint" id="summarize-status" hidden>Summary request sent to all groups (mock).</p>
         </div>
 
         <div id="live-poll-running" class="is-hidden" hidden>
@@ -869,7 +873,7 @@
           <div class="cta-row prep-actions">
             <button type="button" class="btn primary" id="btn-end-poll">End poll · show final</button>
           </div>
-          <p class="hint" id="poll-status" hidden>投票已結束（mock）。可再開另一條活動。</p>
+          <p class="hint" id="poll-status" hidden>Poll ended (mock). You can start another activity.</p>
         </div>
 
         <div id="live-qa-running" class="is-hidden" hidden>
@@ -880,7 +884,7 @@
           <div class="cta-row prep-actions">
             <button type="button" class="btn primary" id="btn-end-qa">End Q&amp;A</button>
           </div>
-          <p class="hint" id="qa-status" hidden>Q&amp;A 已結束（mock）。</p>
+          <p class="hint" id="qa-status" hidden>Q&amp;A ended (mock).</p>
         </div>
 
         <div id="live-canvas-running" class="is-hidden" hidden>
@@ -890,7 +894,7 @@
           <div class="cta-row prep-actions">
             <button type="button" class="btn primary" id="btn-end-canvas">End canvas</button>
           </div>
-          <p class="hint" id="canvas-status" hidden>Canvas 已結束（mock）。</p>
+          <p class="hint" id="canvas-status" hidden>Canvas ended (mock).</p>
         </div>
 
         <div id="live-wordcloud-running" class="is-hidden" hidden>
@@ -900,7 +904,7 @@
           <div class="cta-row prep-actions">
             <button type="button" class="btn primary" id="btn-end-wordcloud">End word cloud</button>
           </div>
-          <p class="hint" id="wordcloud-status" hidden>Word cloud 已結束（mock）。</p>
+          <p class="hint" id="wordcloud-status" hidden>Word cloud ended (mock).</p>
         </div>
 
         <div id="live-quiz-running" class="is-hidden" hidden>
@@ -911,7 +915,7 @@
           <div class="cta-row prep-actions">
             <button type="button" class="btn primary" id="btn-end-quiz">End quiz · show final</button>
           </div>
-          <p class="hint" id="quiz-status" hidden>Quiz 已結束（mock）。</p>
+          <p class="hint" id="quiz-status" hidden>Quiz ended (mock).</p>
         </div>
       </div>
 
@@ -926,7 +930,7 @@
         </div>
         <div class="panel wide">
           <h3>Group health</h3>
-          <p class="field-hint" id="health-locked-hint">開始 Discussion 之後先會有組狀態。</p>
+          <p class="field-hint" id="health-locked-hint">Group health appears after you start Discussion.</p>
           <div class="health is-hidden" id="live-health" hidden>
             <div class="h ok"><b>G1</b><span>On topic</span></div>
             <div class="h ok"><b>G2</b><span>OK</span></div>
@@ -940,7 +944,7 @@
 
       <div class="panel mt is-hidden" id="all-summaries" hidden>
         <h3>AI summaries · all rooms</h3>
-        <p class="field-hint">每組 facilitator 各自交一份（mock）。上面可再開另一條活動。</p>
+        <p class="field-hint">Each group facilitator posts a summary (mock). You can start another activity above.</p>
         <div class="summary-grid" id="summary-grid"></div>
         <div class="cta-row">
           <button type="button" class="btn" data-go="teacher-insight">Class insight card</button>
@@ -953,7 +957,7 @@
             <h2 id="activity-modal-title">Add activity</h2>
             <button type="button" class="q-editor-remove" id="btn-close-activity-modal" aria-label="Close" title="Close">×</button>
           </div>
-          <p class="field-hint">揀類型，填完就加去 Live 清單（唔使返 Session prep）。</p>
+          <p class="field-hint">Pick a type, fill it in, and add it to the Live list (no need to return to Session prep).</p>
           <div class="activity-type-tabs" role="tablist">
             <button type="button" class="activity-type on" data-activity-type="discussion">Discussion</button>
             <button type="button" class="activity-type" data-activity-type="poll">Poll</button>
@@ -977,7 +981,7 @@
                 <input name="slides" type="text" placeholder="e.g. 9–11" />
               </label>
               <label class="field tight">
-                <span>Extra AI instructions（可選）</span>
+                <span>Extra AI instructions (optional)</span>
                 <input name="ai" type="text" placeholder="Optional note to the AI" />
               </label>
             </div>
@@ -987,7 +991,7 @@
                 <textarea name="poll_question" rows="2" placeholder="What should students vote on?"></textarea>
               </label>
               <label class="field tight">
-                <span>Options（每行一個）</span>
+                <span>Options (one per line)</span>
                 <textarea name="poll_options" rows="3" placeholder="Option A&#10;Option B&#10;Option C"></textarea>
               </label>
               <label class="field tight">
@@ -1035,7 +1039,7 @@
                 <textarea name="quiz_question" rows="2" placeholder="MCQ for the class"></textarea>
               </label>
               <label class="field tight">
-                <span>Options（每行一個）</span>
+                <span>Options (one per line)</span>
                 <textarea name="quiz_options" rows="4" placeholder="A&#10;B&#10;C&#10;D"></textarea>
               </label>
               <label class="field tight">
@@ -1066,7 +1070,7 @@
       <p class="eyebrow">Teacher · live · project this</p>
       <h1>Student scan</h1>
       <p class="context-line" data-context></p>
-      <p class="muted">投屏俾學生掃碼入討論。呢頁係老師端，唔會跳去學生流程。</p>
+      <p class="muted">Project this for students to scan into discussion. This is the teacher view — it won’t jump to the student flow.</p>
 
       <div class="panel soft scan-board">
         <div class="qr qr-lg"></div>
@@ -1080,6 +1084,27 @@
       </div>
     </section>
   </template>
+
+  <button type="button" id="btn-tour-help" class="tour-help-fab" title="Tour" aria-label="Open guided tour">?</button>
+
+  <div id="tour-root" class="tour-root is-hidden" hidden>
+    <div class="tour-spotlight is-hidden" id="tour-spotlight" hidden aria-hidden="true"></div>
+    <div class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title">
+      <div class="tour-card-top">
+        <p class="tour-kicker">Tour</p>
+        <span class="tour-step-label" id="tour-step-label">1 / 9</span>
+      </div>
+      <h2 id="tour-title">Title</h2>
+      <p id="tour-body">Body</p>
+      <div class="tour-actions">
+        <button type="button" class="btn" id="btn-tour-skip">Skip</button>
+        <div class="tour-actions-right">
+          <button type="button" class="btn" id="btn-tour-back">Back</button>
+          <button type="button" class="btn primary" id="btn-tour-next">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

@@ -1914,6 +1914,140 @@ body.ai-dock-on .exit-fab {
 
 .role-pick { max-width: 520px; margin: 0 auto; }
 .role-choices { margin-top: 8px; }
+.tour-entry {
+  margin-top: 22px;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.tour-entry .hint { margin: 0; }
+
+/* ——— Guided tour ——— */
+.tour-help-fab {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 90;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(20, 24, 22, 0.12);
+  cursor: pointer;
+}
+.tour-help-fab:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+body.ai-dock-on .tour-help-fab {
+  bottom: 72px;
+}
+body.tour-on .tour-help-fab {
+  display: none;
+}
+body.mobile-ui .tour-help-fab {
+  right: max(16px, calc(50% - 195px + 16px));
+  bottom: 72px;
+}
+
+.tour-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+.tour-root.is-hidden { display: none; }
+.tour-spotlight {
+  pointer-events: none;
+  position: fixed;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 9999px color-mix(in srgb, #0c1210 48%, transparent),
+    0 0 0 2px var(--accent);
+  transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
+  z-index: 99;
+}
+.tour-spotlight.is-hidden { display: none; }
+.tour-card {
+  pointer-events: auto;
+  width: min(440px, calc(100vw - 32px));
+  padding: 16px 18px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 18px 50px rgba(12, 18, 16, 0.22);
+  display: grid;
+  gap: 8px;
+  z-index: 101;
+}
+.tour-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.tour-kicker {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.tour-step-label {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.tour-card h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+.tour-card #tour-body {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.tour-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.tour-actions-right {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+body.mobile-ui .tour-root {
+  /* keep card inside phone chrome */
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 12px;
+}
+body.mobile-ui #app {
+  position: relative;
+}
+body.mobile-ui .tour-spotlight {
+  /* spotlight still uses viewport coords; hide under phone frame to avoid confusion */
+  display: none !important;
+}
 .exit-fab {
   position: fixed;
   left: 16px;

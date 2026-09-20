@@ -833,6 +833,7 @@ function go(name) {
   updateChip(name);
   syncShell(name);
   bindScreen(name);
+  refreshTourHighlight();
 }
 
 function bubble(log, { role, who, text }) {
@@ -1439,13 +1440,13 @@ function renderLivePhase() {
     healthHint.hidden = discOn;
     if (!discOn) {
       const labels = {
-        poll: "投票進行中——組討論 health 暫停。",
-        qa: "Q&A 進行中——組討論 health 暫停。",
-        canvas: "Canvas 進行中——組討論 health 暫停。",
-        wordcloud: "Word cloud 進行中——組討論 health 暫停。",
-        quiz: "Quiz 進行中——組討論 health 暫停。",
+        poll: "Poll in progress — group health paused.",
+        qa: "Q&A in progress — group health paused.",
+        canvas: "Canvas in progress — group health paused.",
+        wordcloud: "Word cloud in progress — group health paused.",
+        quiz: "Quiz in progress — group health paused.",
       };
-      healthHint.textContent = labels[openKind] || "開始 Discussion 之後先會有組狀態。";
+      healthHint.textContent = labels[openKind] || "Group health appears after you start Discussion.";
     }
   }
   if (prepHint) {
@@ -1540,7 +1541,7 @@ function renderLiveQaBoard() {
           </div>`
         )
         .join("")
-    : `<p class="muted">等學生提問…</p>`;
+    : `<p class="muted">Waiting for student questions…</p>`;
 }
 
 function renderLiveCanvasBoard() {
@@ -1758,7 +1759,7 @@ function bindStudentPoll() {
         btn.classList.add("on");
         selected = p.options[Number(btn.getAttribute("data-opt"))];
         if (submit) submit.disabled = !selected;
-        if (hint) hint.textContent = `已揀：${selected}`;
+        if (hint) hint.textContent = `Selected: ${selected}`;
       });
     });
   }
@@ -2258,7 +2259,7 @@ function renderAiCheckLog() {
     : [
         {
           role: "bot",
-          text: "你好——可以問「呢星期有咩堂」、叫我加／改 session，或者 ＋ 附上 syllabus 叫我建科。",
+          text: "Hi — ask “What classes this week?”, ask me to add/edit a session, or attach a syllabus (+) to create a course.",
         },
       ];
   log.innerHTML = msgs
@@ -2286,13 +2287,12 @@ function listWorkspaceScheduleSummary() {
 
 function applyAiCheckCommand(raw) {
   const text = String(raw || "").trim();
-  const lower = text.toLowerCase();
   const file = state._aiBotFile;
 
   // Syllabus attach → build course
   if (
     file &&
-    (/syllabus|建科|開科|建立.*(科|course)|from syllabus|用.*syllabus|讀.*syllabus/i.test(text) ||
+    (/syllabus|from syllabus|build course|create course|generate course|use.*syllabus/i.test(text) ||
       /build|create course|generate/i.test(text))
   ) {
     const draft = mockSyllabusDraft(file.name);
@@ -2333,53 +2333,48 @@ function applyAiCheckCommand(raw) {
     if (fileInput) fileInput.value = "";
     updateChip();
     return {
-      reply: `已用「${file.name}」建好 ${draft.code} · ${draft.title}（${draft.weeks.length} sessions）。已切換到呢科。`,
+      reply: `Created ${draft.code} · ${draft.title} (${draft.weeks.length} sessions) from "${file.name}". Switched to that course.`,
       refresh: true,
     };
   }
 
-  if (file && /^(建|開|做|幫我)/.test(text) && text.length < 12) {
-    return applyAiCheckCommand(`用 syllabus 建科`);
+  if (file && /^(build|create|make|please)/i.test(text) && text.length < 24) {
+    return applyAiCheckCommand(`build course from syllabus`);
   }
 
   // Schedule / when questions
-  if (
-    /有咩堂|邊科|時間表|schedule|幾時|咩時候|今日|呢星期|this week|when|what class/i.test(
-      text
-    )
-  ) {
+  if (/schedule|this week|today|when|what class|classes|timetable/i.test(text)) {
     const lines = listWorkspaceScheduleSummary();
     const focus = course();
     const sec = section();
     const cur = sec.weeks.find((w) => w.week === sec.currentWeek);
     return {
-      reply: `而家 Workspace 概覽：\n${lines.map((l) => `· ${l}`).join("\n")}\n\n你而家睇緊：${focus.code} ${sec.label} · Week ${sec.currentWeek}「${cur?.topic || "—"}」（${cur?.when || sectionTimeValue(sec)}）。`,
+      reply: `Workspace overview:\n${lines.map((l) => `· ${l}`).join("\n")}\n\nYou're viewing: ${focus.code} ${sec.label} · Week ${sec.currentWeek} "${cur?.topic || "—"}" (${cur?.when || sectionTimeValue(sec)}).`,
       refresh: false,
     };
   }
 
   // Rename / change today's topic
   const topicChange = text.match(
-    /(?:topic\s*(?:改|改做|改成|改為|=)|改(?:做|成|為)?(?:今日|而家)?(?:堂)?(?:嘅)?(?:topic)?\s*)(.+)$/i
+    /(?:(?:change|set|rename)\s+(?:today'?s\s+)?topic\s*(?:to|=)\s*|topic\s*(?:to|=)\s*)(.+)$/i
   );
-  const topicAlt = text.match(/把?(?:今日|而家)?(?:堂)?topic\s*(?:改做|改成|改為)\s*(.+)$/i);
-  const newTopic = (topicChange?.[1] || topicAlt?.[1] || "").trim().replace(/^「|」$/g, "");
-  if (newTopic && (/topic|改/i.test(text) || topicAlt)) {
+  const newTopic = (topicChange?.[1] || "").trim().replace(/^["“]|["”]$/g, "");
+  if (newTopic && /topic/i.test(text)) {
     const sec = section();
     const cur = sec.weeks.find((w) => w.week === sec.currentWeek) || sec.weeks[0];
     if (cur) {
       const old = cur.topic;
       cur.topic = newTopic;
       return {
-        reply: `已將 ${course().code} ${sec.label} Week ${cur.week} topic：「${old}」→「${newTopic}」。`,
+        reply: `Updated ${course().code} ${sec.label} Week ${cur.week} topic: "${old}" → "${newTopic}".`,
         refresh: true,
       };
     }
   }
 
-  // Add week session: "加 Week 6 …" / "add week 6 · topic"
+  // Add week session: "add week 6 · topic"
   const addWeek = text.match(
-    /(?:加|新增|開|add)\s*(?:一堂\s*)?(?:week|w)?\s*(\d{1,2})\s*(?:session)?\s*[·\-—:]?\s*(.+)?$/i
+    /(?:add)\s*(?:a\s+)?(?:week|w)?\s*(\d{1,2})\s*(?:session)?\s*[·\-—:]?\s*(.+)?$/i
   );
   if (addWeek) {
     const week = Number(addWeek[1]);
@@ -2398,7 +2393,7 @@ function applyAiCheckCommand(raw) {
       existing.time = time;
       existing.when = when;
       return {
-        reply: `Week ${week} 已存在——已更新 topic 做「${topic}」（${course().code} ${sec.label}）。`,
+        reply: `Week ${week} already exists — updated topic to "${topic}" (${course().code} ${sec.label}).`,
         refresh: true,
       };
     }
@@ -2411,21 +2406,19 @@ function applyAiCheckCommand(raw) {
       status: week < sec.currentWeek ? "done" : week === sec.currentWeek ? "today" : "soon",
     });
     return {
-      reply: `已加 Week ${week}「${topic}」入 ${course().code} ${sec.label}（時間跟 section：${time}）。`,
+      reply: `Added Week ${week} "${topic}" to ${course().code} ${sec.label} (section time: ${time}).`,
       refresh: true,
     };
   }
 
   // Create section via chat
-  const addSec = text.match(
-    /(?:加|新增|開)\s*(?:section|班)?\s*(L\d{2}|S\d{2})\b/i
-  );
+  const addSec = text.match(/(?:add)\s*(?:section)?\s*(L\d{2}|S\d{2})\b/i);
   if (addSec) {
     const label = addSec[1].toUpperCase();
     const c = course();
     if (c.sections[label]) {
       state.sectionId = label;
-      return { reply: `${label} 已存在——已幫你切過去。`, refresh: true };
+      return { reply: `${label} already exists — switched to it.`, refresh: true };
     }
     const time = sectionTimeValue(section()) || "14:30";
     const sec = {
@@ -2451,27 +2444,28 @@ function applyAiCheckCommand(raw) {
     c.sections[label] = sec;
     state.sectionId = label;
     return {
-      reply: `已喺 ${c.code} 開咗 section ${label}（${time} · 40 students）。`,
+      reply: `Created section ${label} in ${c.code} (${time} · 40 students).`,
       refresh: true,
     };
   }
 
-  if (/help|可以做咩|點用|功能/i.test(text)) {
+  if (/help|what can you do|commands|examples/i.test(text)) {
     return {
-      reply: "可以試：\n· 問「呢星期有咩堂？」\n· 「加 Week 6 · PID tuning」\n· 「今日 topic 改做 Mid-term review」\n· 「加 section L03」\n· ＋ 附 syllabus 再講「用 syllabus 建科」",
+      reply:
+        "Try:\n· \"What classes this week?\"\n· \"Add Week 6 · PID tuning\"\n· \"Change today's topic to Mid-term review\"\n· \"Add section L03\"\n· Attach a syllabus (+) then say \"build course from syllabus\"",
       refresh: false,
     };
   }
 
   if (file) {
     return {
-      reply: `已收到檔案「${file.name}」。講「用 syllabus 建科」我就會幫你建；或者直接問時間表／改堂。`,
+      reply: `Got file "${file.name}". Say "build course from syllabus" to create it, or ask about the schedule / edit a session.`,
       refresh: false,
     };
   }
 
   return {
-    reply: "收到。你可以問時間表、叫我加／改 session，或 ＋ 附 syllabus 建科。打「功能」睇例子。",
+    reply: "Got it. Ask about the schedule, add/edit a session, or attach a syllabus (+) to create a course. Type \"help\" for examples.",
     refresh: false,
   };
 }
@@ -2495,7 +2489,7 @@ function bindAiCheckBot() {
       attach?.classList.add("has-file");
       if (hint) {
         hint.hidden = false;
-        hint.textContent = `已附：${state._aiBotFile.name}`;
+        hint.textContent = `Attached: ${state._aiBotFile.name}`;
       }
     }
     return;
@@ -2511,18 +2505,18 @@ function bindAiCheckBot() {
     const msg = String(text || "").trim();
     if (!msg && !state._aiBotFile) return;
     setAiCheckOpen(true);
-    const shown = msg || `（附上 ${state._aiBotFile?.name || "file"}）`;
+    const shown = msg || `(attached ${state._aiBotFile?.name || "file"})`;
     if (!state.aiBotLog?.length) {
       state.aiBotLog = [
         {
           role: "bot",
-          text: "你好——可以問「呢星期有咩堂」、叫我加／改 session，或者 ＋ 附上 syllabus 叫我建科。",
+          text: "Hi — ask “What classes this week?”, ask me to add/edit a session, or attach a syllabus (+) to create a course.",
         },
       ];
     }
     pushAiBot("user", shown);
     window.setTimeout(() => {
-      const result = applyAiCheckCommand(msg || "用 syllabus 建科");
+      const result = applyAiCheckCommand(msg || "build course from syllabus");
       pushAiBot("bot", result.reply);
       if (result.refresh) {
         updateChip();
@@ -2553,10 +2547,10 @@ function bindAiCheckBot() {
       attach?.classList.add("has-file");
       if (hint) {
         hint.hidden = false;
-        hint.textContent = `已附：${f.name}（可打「用 syllabus 建科」）`;
+        hint.textContent = `Attached: ${f.name} (say “build course from syllabus”)`;
       }
       setAiCheckOpen(true);
-      pushAiBot("bot", `已附上「${f.name}」。想建科就講「用 syllabus 建科」；亦可以繼續問時間表或改堂。`);
+      pushAiBot("bot", `Attached “${f.name}”. Say “build course from syllabus” to create a course, or keep asking about schedule / sessions.`);
     } else {
       attach?.classList.remove("has-file");
       if (hint) {
@@ -2712,6 +2706,10 @@ function fillRecordViews() {
 
 function bindScreen(name) {
   fillContextLines();
+
+  if (name === "role-pick") {
+    document.getElementById("btn-start-tour")?.addEventListener("click", () => startTour());
+  }
 
   if (name === "navigator") renderNavigator();
   if (name === "create-section") {
@@ -2877,7 +2875,7 @@ function bindScreen(name) {
               <textarea name="a${n}_question" rows="2" required>${escapeHtml(item.question || "")}</textarea>
             </label>
             <label class="field tight">
-              <span>Options（每行一個）</span>
+              <span>Options (one per line)</span>
               <textarea name="a${n}_options" rows="3" required>${escapeHtml(optsText)}</textarea>
             </label>
             <label class="field tight">
@@ -2951,7 +2949,7 @@ function bindScreen(name) {
               <textarea name="a${n}_question" rows="2" required>${escapeHtml(item.question || "")}</textarea>
             </label>
             <label class="field tight">
-              <span>Options（每行一個）</span>
+              <span>Options (one per line)</span>
               <textarea name="a${n}_options" rows="4" required>${escapeHtml(optsText)}</textarea>
             </label>
             <label class="field tight">
@@ -2986,7 +2984,7 @@ function bindScreen(name) {
             <input name="a${n}_slides" type="text" value="${escapeHtml(item.slides || "")}" />
           </label>
           <label class="field tight">
-            <span>Extra AI instructions（可選）</span>
+            <span>Extra AI instructions (optional)</span>
             <input name="a${n}_ai" type="text" value="${escapeHtml(item.ai || "")}" placeholder="Optional teacher note to the AI" />
           </label>
         </div>
@@ -3138,11 +3136,11 @@ function bindScreen(name) {
     fileInput?.addEventListener("change", () => {
       const f = fileInput.files?.[0];
       if (!f) {
-        fileName.textContent = "未選擇檔案";
+        fileName.textContent = "No file selected";
         return;
       }
       const ok = /\.pptx?$/i.test(f.name);
-      fileName.textContent = ok ? f.name : `${f.name}（請改選 .ppt / .pptx）`;
+      fileName.textContent = ok ? f.name : `${f.name} (please choose .ppt / .pptx)`;
     });
 
     addBtn?.addEventListener("click", () => {
@@ -3197,12 +3195,12 @@ function bindScreen(name) {
       e.preventDefault();
       const f = fileInput?.files?.[0];
       if (f && !/\.pptx?$/i.test(f.name)) {
-        fileName.textContent = `${f.name}（請改選 .ppt / .pptx，或唔選檔）`;
+        fileName.textContent = `${f.name} (please choose .ppt / .pptx, or leave empty)`;
         fileName.style.color = "#b33a3a";
         return;
       }
       fileName.style.color = "";
-      if (!f && fileName) fileName.textContent = "未選擇（可跳過）· 已用示範投影片";
+      if (!f && fileName) fileName.textContent = "No file selected (optional) · using demo slides";
 
       const fd = new FormData(form);
       const editors = [...(actBox?.querySelectorAll(".act-editor") || [])];
@@ -3666,7 +3664,173 @@ document.body.addEventListener("click", (e) => {
   go(dest);
 });
 
+/** In-app guided tour — walks Teacher + Student happy path */
+const TOUR_STEPS = [
+  {
+    screen: "role-pick",
+    title: "Welcome to TeachKit",
+    body: "This is a classroom interaction prototype: teachers prepare and run Live activities; students join by QR. This tour walks through both sides.",
+  },
+  {
+    screen: "role-pick",
+    title: "Two roles, easy to tell apart",
+    body: "Teacher uses a warm / green look; Student uses a cool / blue look. Switch anytime from the top-right — no re-login.",
+    highlight: ".role-choices",
+  },
+  {
+    screen: "navigator",
+    title: "Teacher · Workspace",
+    body: "Hierarchy is Course → Section → Session. After picking a session you can open Session prep or view Record / Insight.",
+    highlight: ".nav-layout",
+  },
+  {
+    screen: "teacher-prep",
+    title: "Session prep",
+    body: "Upload slides, write pre-class thinking questions, and prepare In-class activities (Discussion, Poll, Q&A, Canvas, Word cloud, Quiz). Saving creates a student link.",
+    highlight: "#form-session-prep",
+  },
+  {
+    screen: "teacher-live",
+    title: "Live classroom",
+    body: "In class, pick an activity → Start this activity. Open one at a time; after scanning, students unlock the matching entry in the lobby.",
+    highlight: "#live-phase-panel",
+  },
+  {
+    screen: "student-join",
+    title: "Student · Scan to join",
+    body: "Students scan the classroom QR in the browser (this prototype uses a button). Next is the lobby, waiting for the teacher to open an activity.",
+    highlight: ".qr",
+  },
+  {
+    screen: "student-lobby",
+    title: "Lobby · Waiting for the teacher",
+    body: "When the teacher opens Poll / Q&A / Discussion, Enter appears here. In the prototype, tap Check again to refresh.",
+    highlight: "#lobby-waiting",
+  },
+  {
+    screen: "student-preclass-entry",
+    title: "Pre-class",
+    body: "Students enter a display name, then view embedded slides and answer thinking questions on their phone — no separate PowerPoint.",
+    highlight: "#form-preclass-entry",
+  },
+  {
+    screen: "role-pick",
+    title: "You’re ready to explore",
+    body: "Tips: switch Teacher / Student from the top-right; use Phone view (bottom-left) for the student layout. Tap “?” anytime to reopen this tour.",
+  },
+];
+
+const tourState = {
+  active: false,
+  index: 0,
+};
+
+function setTourOpen(open) {
+  const rootEl = document.getElementById("tour-root");
+  if (!rootEl) return;
+  tourState.active = open;
+  document.body.classList.toggle("tour-on", open);
+  rootEl.classList.toggle("is-hidden", !open);
+  rootEl.hidden = !open;
+  if (!open) clearTourSpotlight();
+}
+
+function clearTourSpotlight() {
+  const spot = document.getElementById("tour-spotlight");
+  if (!spot) return;
+  spot.classList.add("is-hidden");
+  spot.hidden = true;
+  document.querySelectorAll(".tour-target").forEach((el) => el.classList.remove("tour-target"));
+}
+
+function placeTourSpotlight(selector) {
+  clearTourSpotlight();
+  if (!selector) return;
+  const el = document.querySelector(selector);
+  const spot = document.getElementById("tour-spotlight");
+  if (!el || !spot || document.body.classList.contains("mobile-ui")) return;
+  el.classList.add("tour-target");
+  const r = el.getBoundingClientRect();
+  const pad = 8;
+  spot.style.top = `${Math.max(8, r.top - pad)}px`;
+  spot.style.left = `${Math.max(8, r.left - pad)}px`;
+  spot.style.width = `${Math.min(window.innerWidth - 16, r.width + pad * 2)}px`;
+  spot.style.height = `${Math.min(window.innerHeight - 16, r.height + pad * 2)}px`;
+  spot.classList.remove("is-hidden");
+  spot.hidden = false;
+  el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+
+function renderTourStep() {
+  const step = TOUR_STEPS[tourState.index];
+  if (!step) {
+    endTour();
+    return;
+  }
+  const title = document.getElementById("tour-title");
+  const body = document.getElementById("tour-body");
+  const label = document.getElementById("tour-step-label");
+  const nextBtn = document.getElementById("btn-tour-next");
+  const backBtn = document.getElementById("btn-tour-back");
+  if (title) title.textContent = step.title;
+  if (body) body.textContent = step.body;
+  if (label) label.textContent = `${tourState.index + 1} / ${TOUR_STEPS.length}`;
+  if (backBtn) backBtn.disabled = tourState.index === 0;
+  if (nextBtn) nextBtn.textContent = tourState.index === TOUR_STEPS.length - 1 ? "Done" : "Next";
+
+  const hash = location.hash.replace(/^#/, "") || "role-pick";
+  if (step.screen && step.screen !== hash) {
+    go(step.screen);
+    return;
+  }
+  window.requestAnimationFrame(() => placeTourSpotlight(step.highlight));
+}
+
+function refreshTourHighlight() {
+  if (!tourState.active) return;
+  const step = TOUR_STEPS[tourState.index];
+  if (!step) return;
+  window.requestAnimationFrame(() => placeTourSpotlight(step.highlight));
+}
+
+function startTour(at = 0) {
+  tourState.index = Math.max(0, Math.min(at, TOUR_STEPS.length - 1));
+  setTourOpen(true);
+  renderTourStep();
+}
+
+function endTour() {
+  setTourOpen(false);
+  tourState.index = 0;
+}
+
+function bindGuidedTour() {
+  document.getElementById("btn-tour-help")?.addEventListener("click", () => startTour());
+  document.getElementById("btn-tour-skip")?.addEventListener("click", () => {
+    endTour();
+    go("role-pick");
+  });
+  document.getElementById("btn-tour-back")?.addEventListener("click", () => {
+    if (tourState.index <= 0) return;
+    tourState.index -= 1;
+    renderTourStep();
+  });
+  document.getElementById("btn-tour-next")?.addEventListener("click", () => {
+    if (tourState.index >= TOUR_STEPS.length - 1) {
+      endTour();
+      go("role-pick");
+      return;
+    }
+    tourState.index += 1;
+    renderTourStep();
+  });
+  window.addEventListener("resize", () => {
+    if (tourState.active) refreshTourHighlight();
+  });
+}
+
 const initial = location.hash.replace(/^#/, "").split("?")[0];
 bindMobileToggle();
 bindAiCheckBot();
+bindGuidedTour();
 go(SCREENS.includes(initial) ? initial : "role-pick");
